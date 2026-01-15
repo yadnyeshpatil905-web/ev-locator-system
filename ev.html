@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart EV Charging Locator System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --text: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            transition: background 0.3s;
+        }
+
+        /* Navigation */
+        nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(16, 185, 129, 0.9), rgba(59, 130, 246, 0.9)),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%2310b981" width="1200" height="600"/><path fill="%233b82f6" opacity="0.3" d="M0,300 Q300,100 600,300 T1200,300 L1200,600 L0,600 Z"/></svg>');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 8rem 2rem;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            animation: fadeInDown 1s;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--dark);
+        }
+
+        /* Map Section */
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .map-filters {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        /* Forms */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Station Info Popup */
+        .station-popup {
+            padding: 1rem;
+            min-width: 250px;
+        }
+
+        .station-popup h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .station-popup p {
+            margin: 0.25rem 0;
+        }
+
+        .availability-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .available {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .occupied {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .slot-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .slot {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .slot-available {
+            background-color: #10b981;
+        }
+
+        .slot-occupied {
+            background-color: #ef4444;
+        }
+
+        .slot-reserved {
+            background-color: #f59e0b;
+        }
+
+        .slots-info {
+            background: #f1f5f9;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+        }
+
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Charging Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+
+            nav .nav-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            #map {
+                height: 400px;
+            }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">⚡ EV Locator</div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="showPage('home')">Home</a></li>
+                <li><a href="#" onclick="showPage('locator')">Find Stations</a></li>
+                <li><a href="#" onclick="showPage('about')">About</a></li>
+                <li><a href="#" onclick="showPage('contact')">Contact</a></li>
+                <li><a href="#" onclick="handleAuthClick()" id="authLink">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Home Page -->
+    <div id="home" class="page">
+        <div class="hero">
+            <h1>Smart EV Charging Locator System</h1>
+            <p>Find nearby EV charging stations instantly. Plan your journey with real-time availability and smart navigation.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="showPage('locator')">Find Stations</button>
+                <button class="btn btn-secondary" onclick="showPage('register')">Get Started</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Why Choose Our System?</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">📍</div>
+                    <h3>Real-Time Location</h3>
+                    <p>Find the nearest charging stations based on your current location with live GPS tracking.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Live Availability</h3>
+                    <p>Check real-time availability status before you drive. Save time and energy.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🗺️</div>
+                    <h3>Smart Navigation</h3>
+                    <p>Get instant directions to any charging station with one-tap navigation.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🔍</div>
+                    <h3>Advanced Filters</h3>
+                    <p>Filter by charger type, speed, distance, and availability to find your perfect match.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💚</div>
+                    <h3>Eco-Friendly</h3>
+                    <p>Supporting sustainable transportation and reducing carbon footprint.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📱</div>
+                    <h3>Mobile Ready</h3>
+                    <p>Fully responsive design works seamlessly on all devices.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" style="background: var(--light);">
+            <h2 class="section-title">Success Stories</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🎯 50,000+ Users</h3>
+                    <p>Helped thousands of EV drivers find charging stations efficiently.</p>
+                </div>
+                <div class="card">
+                    <h3>🌍 500+ Stations</h3>
+                    <p>Comprehensive database covering major cities and highways.</p>
+                </div>
+                <div class="card">
+                    <h3>⭐ 4.8/5 Rating</h3>
+                    <p>Highly rated by users for accuracy and ease of use.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locator Page -->
+    <div id="locator" class="page hidden">
+        <div class="section">
+            <h2 class="section-title">EV Charging Station Locator</h2>
+            
+            <div class="map-filters">
+                <h3>Filter Stations</h3>
+                <div class="filter-group">
+                    <select id="chargerType" onchange="filterStations()">
+                        <option value="all">All Charger Types</option>
+                        <option value="CCS">CCS</option>
+                        <option value="Type-2">Type-2</option>
+                        <option value="CHAdeMO">CHAdeMO</option>
+                    </select>
+                    <select id="speedFilter" onchange="filterStations()">
+                        <option value="all">All Speeds</option>
+                        <option value="fast">Fast Charger</option>
+                        <option value="normal">Normal Charger</option>
+                    </select>
+                    <select id="availabilityFilter" onchange="filterStations()">
+                        <option value="all">All Stations</option>
+                        <option value="available">Available Only</option>
+                        <option value="occupied">Occupied Only</option>
+                    </select>
+                    <select id="distanceFilter" onchange="filterStations()">
+                        <option value="20">Within 20 km</option>
+                        <option value="10">Within 10 km</option>
+                        <option value="5">Within 5 km</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="getLocation()" style="margin-top: 1rem;">📍 Use My Location</button>
+            </div>
+
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="register" class="page hidden">
+        <div class="section">
+            <div class="form-container">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Create Account</h2>
+                <div id="registerAlert" class="alert"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <input type="tel" id="regMobile" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="regPassword" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="registerBtn" style="width: 100%;">Register</button>
+                    <p style="text-align: center; margin-top: 1rem;">
+                        Already have an account? <a href="#" onclick="showPage('login')" style="color: var(--primary);">Login</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login" class="page hidden">
+        <div class="section">
+            <div class="form-container">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Login</h2>
+                <div id="loginAlert" class="alert"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="loginBtn" style="width: 100%;">Login</button>
+                    <p style="text-align: center; margin-top: 1rem;">
+                        Don't have an account? <a href="#" onclick="showPage('register')" style="color: var(--primary);">Register</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard" class="page hidden">
+        <div class="section">
+            <h2 class="section-title">Welcome, <span id="userName"></span>!</h2>
+            
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3 id="totalVisits">0</h3>
+                    <p>Stations Visited</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalEnergy">0</h3>
+                    <p>kWh Charged</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalSpent">₹0</h3>
+                    <p>Total Spent</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="reservedSlots">0</h3>
+                    <p>Active Reservations</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3>Your Active Reservations</h3>
+                <div class="card-grid" id="reservationsList">
+                    <div class="card">
+                        <p style="text-align: center; color: #666;">No active reservations</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3>Recently Visited Stations</h3>
+                <div class="card-grid" id="recentStations">
+                    <div class="card">
+                        <p style="text-align: center; color: #666;">No visited stations yet. Start charging!</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="handleLogout()" style="margin-top: 2rem;">Logout</button>
+        </div>
+    </div>
+
+    <!-- About Page -->
+    <div id="about" class="page hidden">
+        <div class="section">
+            <h2 class="section-title">About Us</h2>
+            <div class="container" style="max-width: 800px;">
+                <div class="card">
+                    <h3>What is Smart EV Charging Locator System?</h3>
+                    <p>Our Smart EV Charging Locator System is a comprehensive web application designed to help electric vehicle owners find, navigate to, and utilize charging stations efficiently. We combine real-time data, intelligent filtering, and user-friendly design to make EV charging hassle-free.</p>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3>🎯 Our Goals</h3>
+                    <ul style="list-style-position: inside; line-height: 2;">
+                        <li>Make EV charging infrastructure accessible to everyone</li>
+                        <li>Reduce range anxiety for EV drivers</li>
+                        <li>Promote sustainable transportation</li>
+                        <li>Provide accurate, real-time charging station data</li>
+                        <li>Support the growth of EV adoption</li>
+                    </ul>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3>🌱 Sustainability Benefits</h3>
+                    <p>By making EV charging more accessible and convenient, we're contributing to:</p>
+                    <ul style="list-style-position: inside; line-height: 2;">
+                        <li>Reduced carbon emissions</li>
+                        <li>Cleaner air in urban areas</li>
+                        <li>Decreased dependence on fossil fuels</li>
+                        <li>Support for renewable energy adoption</li>
+                        <li>A greener future for generations to come</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contact" class="page hidden">
+        <div class="section">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="form-container">
+                <div id="contactAlert" class="alert"></div>
+                <form onsubmit="handleContact(event)">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="contactName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="contactEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea rows="5" id="contactMessage" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="contactBtn" style="width: 100%;">Send Message</button>
+                </form>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3>Project Credits</h3>
+                    <p><strong>Developed by:</strong> Engineering Students</p>
+                    <p><strong>Institution:</strong> [Your College Name]</p>
+                    <p><strong>Department:</strong> Computer Science & Engineering</p>
+                    <p style="margin-top: 1rem;"><em>A project to promote sustainable transportation and smart technology integration.</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Smart EV Locator</h3>
+                <p>Making EV charging accessible and convenient for everyone.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#" onclick="showPage('home')">Home</a></li>
+                    <li><a href="#" onclick="showPage('locator')">Find Stations</a></li>
+                    <li><a href="#" onclick="showPage('about')">About</a></li>
+                    <li><a href="#" onclick="showPage('contact')">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Info</h3>
+                <p>📧 info@evlocator.com</p>
+                <p>📱 +91 1234567890</p>
+                <p>📍 Pune, Maharashtra, India</p>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #475569;">
+            <p>&copy; 2025 Smart EV Charging Locator System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Charging Modal -->
+    <div id="chargingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Reserve Charging Slot</h3>
+                <button class="modal-close" onclick="closeChargingModal()">×</button>
+            </div>
+            <div id="modalContent">
+                <!-- Modal content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // ============= CONFIGURATION =============
+        const API_URL = 'http://localhost:5000/api';
+        
+        // ============= STATE MANAGEMENT =============
+        let map, userMarker;
+        let allMarkers = [];
+        let chargingStations = [];
+        let currentUser = null;
+        let userLocation = null;
+        let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+
+        // ============= FAKE DATABASE FOR CHARGING SLOTS =============
+        class FakeChargingDatabase {
+            constructor() {
+                // Initialize with sample stations and their slots
+                this.stations = {};
+                this.reservations = {};
+                this.initializeDatabase();
+            }
+
+            initializeDatabase() {
+                // Sample station data with slots
+                const stationTemplates = [
+                    {
+                        id: 'station1',
+                        name: 'Green Energy Hub',
+                        totalSlots: 8,
+                        slots: [
+                            { id: 'slot1', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot2', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot3', status: 'occupied', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot4', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot5', status: 'reserved', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot6', status: 'available', vehicleType: 'bike', power: '7kW' },
+                            { id: 'slot7', status: 'occupied', vehicleType: 'bike', power: '7kW' },
+                            { id: 'slot8', status: 'available', vehicleType: 'car', power: '150kW' }
+                        ]
+                    },
+                    {
+                        id: 'station2',
+                        name: 'EcoCharge Station',
+                        totalSlots: 6,
+                        slots: [
+                            { id: 'slot1', status: 'available', vehicleType: 'car', power: '150kW' },
+                            { id: 'slot2', status: 'available', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot3', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot4', status: 'occupied', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot5', status: 'occupied', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot6', status: 'available', vehicleType: 'bike', power: '7kW' }
+                        ]
+                    },
+                    {
+                        id: 'station3',
+                        name: 'PowerUp Point',
+                        totalSlots: 4,
+                        slots: [
+                            { id: 'slot1', status: 'available', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot2', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot3', status: 'reserved', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot4', status: 'available', vehicleType: 'bike', power: '7kW' }
+                        ]
+                    },
+                    {
+                        id: 'station4',
+                        name: 'QuickCharge Hub',
+                        totalSlots: 10,
+                        slots: [
+                            { id: 'slot1', status: 'available', vehicleType: 'car', power: '350kW' },
+                            { id: 'slot2', status: 'available', vehicleType: 'car', power: '150kW' },
+                            { id: 'slot3', status: 'occupied', vehicleType: 'car', power: '150kW' },
+                            { id: 'slot4', status: 'available', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot5', status: 'available', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot6', status: 'occupied', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot7', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot8', status: 'available', vehicleType: 'bike', power: '7kW' },
+                            { id: 'slot9', status: 'available', vehicleType: 'bike', power: '7kW' },
+                            { id: 'slot10', status: 'reserved', vehicleType: 'car', power: '350kW' }
+                        ]
+                    },
+                    {
+                        id: 'station5',
+                        name: 'Volt Station',
+                        totalSlots: 5,
+                        slots: [
+                            { id: 'slot1', status: 'available', vehicleType: 'car', power: '150kW' },
+                            { id: 'slot2', status: 'available', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot3', status: 'occupied', vehicleType: 'car', power: '50kW' },
+                            { id: 'slot4', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot5', status: 'available', vehicleType: 'bike', power: '7kW' }
+                        ]
+                    },
+                    {
+                        id: 'station6',
+                        name: 'Energy Point',
+                        totalSlots: 3,
+                        slots: [
+                            { id: 'slot1', status: 'available', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot2', status: 'occupied', vehicleType: 'car', power: '22kW' },
+                            { id: 'slot3', status: 'available', vehicleType: 'bike', power: '7kW' }
+                        ]
+                    }
+                ];
+
+                stationTemplates.forEach(station => {
+                    this.stations[station.id] = {
+                        ...station,
+                        availableSlots: station.slots.filter(s => s.status === 'available').length,
+                        occupiedSlots: station.slots.filter(s => s.status === 'occupied').length,
+                        reservedSlots: station.slots.filter(s => s.status === 'reserved').length
+                    };
+                });
+            }
+
+            getStationSlots(stationId) {
+                return this.stations[stationId] || null;
+            }
+
+            getAvailableSlots(stationId) {
+                const station = this.stations[stationId];
+                if (!station) return [];
+                return station.slots.filter(slot => slot.status === 'available');
+            }
+
+            reserveSlot(stationId, slotId, userId) {
+                const station = this.stations[stationId];
+                if (!station) return false;
+
+                const slot = station.slots.find(s => s.id === slotId);
+                if (!slot || slot.status !== 'available') return false;
+
+                slot.status = 'reserved';
+                slot.reservedBy = userId;
+                slot.reservedAt = new Date().toISOString();
+
+                // Update counts
+                station.availableSlots = station.slots.filter(s => s.status === 'available').length;
+                station.reservedSlots = station.slots.filter(s => s.status === 'reserved').length;
+
+                // Store reservation
+                const reservationId = `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                this.reservations[reservationId] = {
+                    id: reservationId,
+                    stationId,
+                    slotId,
+                    userId,
+                    stationName: station.name,
+                    slotPower: slot.power,
+                    reservedAt: slot.reservedAt,
+                    expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes reservation
+                    status: 'active'
+                };
+
+                this.saveToLocalStorage();
+                return { success: true, reservationId, slot };
+            }
+
+            startCharging(stationId, slotId, userId) {
+                const station = this.stations[stationId];
+                if (!station) return false;
+
+                const slot = station.slots.find(s => s.id === slotId);
+                if (!slot) return false;
+
+                // If reserved by this user, convert to occupied
+                if (slot.status === 'reserved' && slot.reservedBy === userId) {
+                    slot.status = 'occupied';
+                    slot.reservedBy = null;
+                    slot.occupiedAt = new Date().toISOString();
+
+                    // Update counts
+                    station.availableSlots = station.slots.filter(s => s.status === 'available').length;
+                    station.occupiedSlots = station.slots.filter(s => s.status === 'occupied').length;
+                    station.reservedSlots = station.slots.filter(s => s.status === 'reserved').length;
+
+                    this.saveToLocalStorage();
+                    return { success: true, slot };
+                }
+
+                // If slot is available, occupy it
+                if (slot.status === 'available') {
+                    slot.status = 'occupied';
+                    slot.occupiedAt = new Date().toISOString();
+
+                    // Update counts
+                    station.availableSlots = station.slots.filter(s => s.status === 'available').length;
+                    station.occupiedSlots = station.slots.filter(s => s.status === 'occupied').length;
+
+                    this.saveToLocalStorage();
+                    return { success: true, slot };
+                }
+
+                return false;
+            }
+
+            endCharging(stationId, slotId) {
+                const station = this.stations[stationId];
+                if (!station) return false;
+
+                const slot = station.slots.find(s => s.id === slotId);
+                if (!slot || slot.status !== 'occupied') return false;
+
+                slot.status = 'available';
+                slot.occupiedAt = null;
+                slot.reservedBy = null;
+
+                // Update counts
+                station.availableSlots = station.slots.filter(s => s.status === 'available').length;
+                station.occupiedSlots = station.slots.filter(s => s.status === 'occupied').length;
+
+                this.saveToLocalStorage();
+                return { success: true, slot };
+            }
+
+            cancelReservation(reservationId) {
+                const reservation = this.reservations[reservationId];
+                if (!reservation) return false;
+
+                const station = this.stations[reservation.stationId];
+                if (!station) return false;
+
+                const slot = station.slots.find(s => s.id === reservation.slotId);
+                if (slot && slot.status === 'reserved') {
+                    slot.status = 'available';
+                    slot.reservedBy = null;
+
+                    // Update counts
+                    station.availableSlots = station.slots.filter(s => s.status === 'available').length;
+                    station.reservedSlots = station.slots.filter(s => s.status === 'reserved').length;
+                }
+
+                reservation.status = 'cancelled';
+                this.saveToLocalStorage();
+                return true;
+            }
+
+            getUserReservations(userId) {
+                return Object.values(this.reservations).filter(
+                    r => r.userId === userId && r.status === 'active'
+                );
+            }
+
+            getStationStatus(stationId) {
+                const station = this.stations[stationId];
+                if (!station) return null;
+
+                return {
+                    totalSlots: station.totalSlots,
+                    availableSlots: station.availableSlots,
+                    occupiedSlots: station.occupiedSlots,
+                    reservedSlots: station.reservedSlots,
+                    slots: station.slots
+                };
+            }
+
+            updateSlotStatusRandomly() {
+                // Simulate random slot status changes (for demo purposes)
+                Object.values(this.stations).forEach(station => {
+                    if (Math.random() > 0.7) { // 30% chance to change status
+                        station.slots.forEach(slot => {
+                            if (slot.status === 'occupied' && Math.random() > 0.8) {
+                                slot.status = 'available';
+                                slot.occupiedAt = null;
+                            } else if (slot.status === 'available' && Math.random() > 0.9) {
+                                slot.status = 'occupied';
+                                slot.occupiedAt = new Date().toISOString();
+                            } else if (slot.status === 'reserved' && Math.random() > 0.85) {
+                                const reservation = Object.values(this.reservations).find(
+                                    r => r.stationId === station.id && r.slotId === slot.id
+                                );
+                                if (reservation && new Date(reservation.expiresAt) < new Date()) {
+                                    slot.status = 'available';
+                                    slot.reservedBy = null;
+                                    reservation.status = 'expired';
+                                }
+                            }
+                        });
+
+                        // Update counts
+                        station.availableSlots = station.slots.filter(s => s.status === 'available').length;
+                        station.occupiedSlots = station.slots.filter(s => s.status === 'occupied').length;
+                        station.reservedSlots = station.slots.filter(s => s.status === 'reserved').length;
+                    }
+                });
+
+                this.saveToLocalStorage();
+                return this.stations;
+            }
+
+            saveToLocalStorage() {
+                localStorage.setItem('chargingDatabase', JSON.stringify({
+                    stations: this.stations,
+                    reservations: this.reservations
+                }));
+            }
+
+            loadFromLocalStorage() {
+                const data = localStorage.getItem('chargingDatabase');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    this.stations = parsed.stations || {};
+                    this.reservations = parsed.reservations || {};
+                } else {
+                    this.initializeDatabase();
+                }
+            }
+        }
+
+        // Initialize fake database
+        const chargingDB = new FakeChargingDatabase();
+        chargingDB.loadFromLocalStorage();
+
+        // Update slot status every 30 seconds
+        setInterval(() => {
+            chargingDB.updateSlotStatusRandomly();
+            if (map && allMarkers.length > 0) {
+                updateAllStationMarkers();
+            }
+        }, 30000);
+
+        // ============= INITIALIZATION =============
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            loadStationsFromAPI();
+            updateReservationsList();
+        });
+
+        // ============= AUTH FUNCTIONS =============
+        function checkAuthState() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                currentUser = JSON.parse(user);
+                updateAuthUI(true);
+            } else {
+                updateAuthUI(false);
+            }
+        }
+
+        function updateAuthUI(isLoggedIn) {
+            const authLink = document.getElementById('authLink');
+            if (isLoggedIn) {
+                authLink.textContent = 'Dashboard';
+            } else {
+                authLink.textContent = 'Login';
+            }
+        }
+
+        function handleAuthClick() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                showPage('dashboard');
+                loadDashboard();
+            } else {
+                showPage('login');
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('registerBtn');
+            const alert = document.getElementById('registerAlert');
+            
+            btn.innerHTML = '<span class="loading"></span> Registering...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('regName').value,
+                        email: document.getElementById('regEmail').value,
+                        mobile: document.getElementById('regMobile').value,
+                        password: document.getElementById('regPassword').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    currentUser = data.user;
+                    
+                    showAlert(alert, 'Registration successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        showPage('dashboard');
+                        loadDashboard();
+                    }, 1500);
+                } else {
+                    showAlert(alert, data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showAlert(alert, 'Network error. Please try again.', 'error');
+            } finally {
+                btn.innerHTML = 'Register';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('loginBtn');
+            const alert = document.getElementById('loginAlert');
+            
+            btn.innerHTML = '<span class="loading"></span> Logging in...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    currentUser = data.user;
+                    
+                    showAlert(alert, 'Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        showPage('dashboard');
+                        loadDashboard();
+                    }, 1500);
+                } else {
+                    showAlert(alert, data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showAlert(alert, 'Network error. Please try again.', 'error');
+            } finally {
+                btn.innerHTML = 'Login';
+                btn.disabled = false;
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                currentUser = null;
+                updateAuthUI(false);
+                showPage('home');
+            }
+        }
+
+        async function loadDashboard() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('userName').textContent = data.user.name;
+                    document.getElementById('totalVisits').textContent = data.stats.totalVisits;
+                    document.getElementById('totalEnergy').textContent = Math.round(data.stats.totalEnergy);
+                    document.getElementById('totalSpent').textContent = `₹${data.stats.totalSpent.toFixed(0)}`;
+                    
+                    // Get user reservations from fake DB
+                    if (currentUser) {
+                        const userReservations = chargingDB.getUserReservations(currentUser.email);
+                        document.getElementById('reservedSlots').textContent = userReservations.length;
+                        updateReservationsList();
+                    }
+                    
+                    // Display recent stations
+                    const recentStations = data.user.visitedStations.slice(-2).reverse();
+                    if (recentStations.length > 0) {
+                        const container = document.getElementById('recentStations');
+                        container.innerHTML = recentStations.map(visit => `
+                            <div class="card">
+                                <h4>Station #${visit.stationId.substring(0, 8)}</h4>
+                                <p>⚡ ${visit.energyCharged} kWh charged</p>
+                                <p>💰 ₹${visit.amountPaid}</p>
+                                <p style="color: #666; margin-top: 0.5rem;">
+                                    ${new Date(visit.visitDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateReservationsList() {
+            if (!currentUser) return;
+            
+            const userReservations = chargingDB.getUserReservations(currentUser.email);
+            const container = document.getElementById('reservationsList');
+            
+            if (userReservations.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <p style="text-align: center; color: #666;">No active reservations</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = userReservations.map(reservation => `
+                <div class="card">
+                    <h4>${reservation.stationName}</h4>
+                    <p><strong>Slot:</strong> ${reservation.slotId} (${reservation.slotPower})</p>
+                    <p><strong>Reserved:</strong> ${new Date(reservation.reservedAt).toLocaleTimeString()}</p>
+                    <p><strong>Expires:</strong> ${new Date(reservation.expiresAt).toLocaleTimeString()}</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="startCharging('${reservation.stationId}', '${reservation.slotId}')">
+                            Start Charging
+                        </button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="cancelReservation('${reservation.id}')">
+                            Cancel Reservation
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============= STATION FUNCTIONS =============
+        async function loadStationsFromAPI() {
+            try {
+                const response = await fetch(`${API_URL}/stations`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    chargingStations = data.stations.map(station => {
+                        const dbStation = chargingDB.getStationStatus(`station${station._id}`);
+                        return {
+                            ...station,
+                            totalSlots: dbStation ? dbStation.totalSlots : 4,
+                            availableSlots: dbStation ? dbStation.availableSlots : Math.floor(Math.random() * 4),
+                            occupiedSlots: dbStation ? dbStation.occupiedSlots : Math.floor(Math.random() * 2),
+                            reservedSlots: dbStation ? dbStation.reservedSlots : 0
+                        };
+                    });
+                    if (document.getElementById('locator').classList.contains('page') && 
+                        !document.getElementById('locator').classList.contains('hidden')) {
+                        initMap();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stations:', error);
+                useFallbackData();
+            }
+        }
+
+        function useFallbackData() {
+            chargingStations = [
+                { _id: '1', name: "Green Energy Hub", lat: 18.5204, lng: 73.8567, type: "Type-2", speed: "fast", available: true, address: "MG Road, Pune", price: 12 },
+                { _id: '2', name: "EcoCharge Station", lat: 18.5314, lng: 73.8446, type: "CCS", speed: "fast", available: false, address: "FC Road, Pune", price: 15 },
+                { _id: '3', name: "PowerUp Point", lat: 18.5074, lng: 73.8077, type: "CHAdeMO", speed: "normal", available: true, address: "Kothrud, Pune", price: 10 },
+                { _id: '4', name: "QuickCharge Hub", lat: 18.5642, lng: 73.7769, type: "Type-2", speed: "fast", available: true, address: "Hinjewadi, Pune", price: 13 },
+                { _id: '5', name: "Volt Station", lat: 18.4520, lng: 73.8567, type: "CCS", speed: "fast", available: true, address: "Hadapsar, Pune", price: 14 },
+                { _id: '6', name: "Energy Point", lat: 18.5403, lng: 73.9007, type: "Type-2", speed: "normal", available: false, address: "Viman Nagar, Pune", price: 11 },
+            ].map(station => {
+                const dbStation = chargingDB.getStationStatus(`station${station._id}`);
+                return {
+                    ...station,
+                    totalSlots: dbStation ? dbStation.totalSlots : 4,
+                    availableSlots: dbStation ? dbStation.availableSlots : Math.floor(Math.random() * 4),
+                    occupiedSlots: dbStation ? dbStation.occupiedSlots : Math.floor(Math.random() * 2),
+                    reservedSlots: dbStation ? dbStation.reservedSlots : 0
+                };
+            });
+        }
+
+        function initMap() {
+            if (!map) {
+                map = L.map('map').setView([18.5204, 73.8567], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            }
+            
+            displayStations(chargingStations);
+        }
+
+        function displayStations(stations) {
+            allMarkers.forEach(marker => map.removeLayer(marker));
+            allMarkers = [];
+
+            stations.forEach(station => {
+                const iconColor = getStationColor(station);
+                const icon = L.divIcon({
+                    html: `
+                        <div style="background: ${iconColor}; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">
+                            ${station.availableSlots}
+                        </div>
+                    `,
+                    iconSize: [35, 35],
+                    className: 'custom-marker'
+                });
+
+                const marker = L.marker([station.lat, station.lng], { icon }).addTo(map);
+                
+                const distance = station.distance ? `<p><strong>Distance:</strong> ${station.distance} km</p>` : '';
+                const slotInfo = getSlotInfoHtml(station);
+                
+                const popupContent = `
+                    <div class="station-popup">
+                        <h4>${station.name}</h4>
+                        <p><strong>Address:</strong> ${station.address}</p>
+                        <p><strong>Type:</strong> ${station.type} (${station.speed === 'fast' ? 'Fast' : 'Normal'} Charger)</p>
+                        <p><strong>Price:</strong> ₹${station.price}/kWh</p>
+                        ${distance}
+                        ${slotInfo}
+                        <br>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="navigate(${station.lat}, ${station.lng})" style="padding: 0.5rem; font-size: 0.9rem;">Navigate</button>
+                            <button class="btn btn-secondary" onclick="showChargingModal('${station._id}')" style="padding: 0.5rem; font-size: 0.9rem;">View Slots</button>
+                        </div>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                allMarkers.push(marker);
+            });
+        }
+
+        function getStationColor(station) {
+            if (station.availableSlots === 0) return '#ef4444'; // Red for no slots
+            if (station.availableSlots <= station.totalSlots * 0.3) return '#f59e0b'; // Orange for low availability
+            return '#10b981'; // Green for good availability
+        }
+
+        function getSlotInfoHtml(station) {
+            const dbStation = chargingDB.getStationStatus(`station${station._id}`);
+            if (!dbStation) {
+                return `
+                    <div class="slots-info">
+                        <p><strong>Slots:</strong> ${station.availableSlots} available out of ${station.totalSlots}</p>
+                        <div class="slot-indicator">
+                            ${Array.from({ length: station.totalSlots }).map((_, i) => `
+                                <div class="slot ${i < station.availableSlots ? 'slot-available' : 'slot-occupied'}"></div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let slotsHtml = '';
+            dbStation.slots.forEach(slot => {
+                let slotClass = 'slot-available';
+                if (slot.status === 'occupied') slotClass = 'slot-occupied';
+                if (slot.status === 'reserved') slotClass = 'slot-reserved';
+                
+                slotsHtml += `
+                    <div class="slot-indicator" title="${slot.id} - ${slot.vehicleType} - ${slot.power}">
+                        <div class="slot ${slotClass}"></div>
+                        <span style="font-size: 0.8rem;">${slot.id}: ${slot.power}</span>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="slots-info">
+                    <p><strong>Slot Status:</strong> ${dbStation.availableSlots} available, ${dbStation.occupiedSlots} occupied, ${dbStation.reservedSlots} reserved</p>
+                    <div style="margin: 0.5rem 0;">
+                        ${slotsHtml}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <div class="slot slot-available" style="width: 12px; height: 12px;"></div>
+                            <span>Available</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <div class="slot slot-occupied" style="width: 12px; height: 12px;"></div>
+                            <span>Occupied</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <div class="slot slot-reserved" style="width: 12px; height: 12px;"></div>
+                            <span>Reserved</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAllStationMarkers() {
+            chargingStations.forEach(station => {
+                const dbStation = chargingDB.getStationStatus(`station${station._id}`);
+                if (dbStation) {
+                    station.availableSlots = dbStation.availableSlots;
+                    station.occupiedSlots = dbStation.occupiedSlots;
+                    station.reservedSlots = dbStation.reservedSlots;
+                }
+            });
+            
+            displayStations(chargingStations);
+        }
+
+        async function filterStations() {
+            const typeFilter = document.getElementById('chargerType').value;
+            const speedFilter = document.getElementById('speedFilter').value;
+            const availFilter = document.getElementById('availabilityFilter').value;
+            const distanceFilter = document.getElementById('distanceFilter').value;
+
+            let params = new URLSearchParams();
+            if (typeFilter !== 'all') params.append('type', typeFilter);
+            if (speedFilter !== 'all') params.append('speed', speedFilter);
+            if (availFilter !== 'all') params.append('available', availFilter);
+            
+            if (userLocation) {
+                params.append('lat', userLocation.lat);
+                params.append('lng', userLocation.lng);
+                params.append('radius', distanceFilter);
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/stations?${params}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayStations(data.stations);
+                }
+            } catch (error) {
+                let filtered = chargingStations.filter(station => {
+                    const typeMatch = typeFilter === 'all' || station.type === typeFilter;
+                    const speedMatch = speedFilter === 'all' || station.speed === speedFilter;
+                    
+                    let availMatch = true;
+                    if (availFilter === 'available') {
+                        availMatch = station.availableSlots > 0;
+                    } else if (availFilter === 'occupied') {
+                        availMatch = station.availableSlots === 0;
+                    }
+                    
+                    return typeMatch && speedMatch && availMatch;
+                });
+                
+                displayStations(filtered);
+            }
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    userLocation = { lat, lng };
+                    map.setView([lat, lng], 14);
+                    
+                    if (userMarker) {
+                        map.removeLayer(userMarker);
+                    }
+                    
+                    const userIcon = L.divIcon({
+                        html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5);"></div>',
+                        iconSize: [20, 20]
+                    });
+                    
+                    userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+                    userMarker.bindPopup('You are here').openPopup();
+                    
+                    filterStations();
+                }, error => {
+                    alert('Unable to get your location. Please enable location services.');
+                });
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
+        }
+
+        function navigate(lat, lng) {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            window.open(url, '_blank');
+        }
+
+        // ============= CHARGING MODAL FUNCTIONS =============
+        function showChargingModal(stationId) {
+            const station = chargingStations.find(s => s._id === stationId);
+            if (!station) return;
+
+            const dbStation = chargingDB.getStationStatus(`station${stationId}`);
+            if (!dbStation) return;
+
+            document.getElementById('modalTitle').textContent = `Charging Slots - ${station.name}`;
+            
+            let modalContent = `
+                <div style="margin-bottom: 1.5rem;">
+                    <p><strong>Address:</strong> ${station.address}</p>
+                    <p><strong>Pricing:</strong> ₹${station.price}/kWh</p>
+                    <p><strong>Status:</strong> ${dbStation.availableSlots} slots available</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="margin-bottom: 0.5rem;">Available Charging Slots:</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem;">
+            `;
+
+            dbStation.slots.forEach(slot => {
+                let statusClass = '';
+                let statusText = '';
+                let buttonHtml = '';
+                
+                if (slot.status === 'available') {
+                    statusClass = 'available';
+                    statusText = 'Available';
+                    if (currentUser) {
+                        buttonHtml = `
+                            <button class="btn btn-primary" onclick="reserveSlot('${stationId}', '${slot.id}')" style="width: 100%; padding: 0.5rem; font-size: 0.9rem;">
+                                Reserve
+                            </button>
+                        `;
+                    } else {
+                        buttonHtml = `
+                            <button class="btn btn-secondary" onclick="showPage('login')" style="width: 100%; padding: 0.5rem; font-size: 0.9rem;">
+                                Login to Reserve
+                            </button>
+                        `;
+                    }
+                } else if (slot.status === 'reserved') {
+                    statusClass = 'occupied';
+                    statusText = 'Reserved';
+                    buttonHtml = `
+                        <span class="availability-badge occupied" style="width: 100%; text-align: center; display: block; padding: 0.5rem;">
+                            Reserved
+                        </span>
+                    `;
+                } else if (slot.status === 'occupied') {
+                    statusClass = 'occupied';
+                    statusText = 'Occupied';
+                    buttonHtml = `
+                        <span class="availability-badge occupied" style="width: 100%; text-align: center; display: block; padding: 0.5rem;">
+                            In Use
+                        </span>
+                    `;
+                }
+
+                modalContent += `
+                    <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; text-align: center;">
+                        <div style="font-weight: bold; margin-bottom: 0.25rem;">${slot.id}</div>
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;">${slot.power}</div>
+                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">${slot.vehicleType}</div>
+                        <span class="availability-badge ${statusClass}" style="margin-bottom: 0.5rem; display: block;">
+                            ${statusText}
+                        </span>
+                        ${buttonHtml}
+                    </div>
+                `;
+            });
+
+            modalContent += `
+                    </div>
+                </div>
+            `;
+
+            if (currentUser) {
+                modalContent += `
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                        <h4 style="margin-bottom: 0.5rem;">Quick Actions</h4>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" onclick="startImmediateCharging('${stationId}')" style="flex: 1;">
+                                Start Immediate Charging
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modalContent').innerHTML = modalContent;
+            document.getElementById('chargingModal').style.display = 'flex';
+        }
+
+        function closeChargingModal() {
+            document.getElementById('chargingModal').style.display = 'none';
+        }
+
+        function reserveSlot(stationId, slotId) {
+            if (!currentUser) {
+                alert('Please login first');
+                showPage('login');
+                return;
+            }
+
+            const result = chargingDB.reserveSlot(`station${stationId}`, slotId, currentUser.email);
+            if (result.success) {
+                alert(`Slot ${slotId} reserved successfully! You have 30 minutes to start charging.`);
+                closeChargingModal();
+                updateAllStationMarkers();
+                updateReservationsList();
+                loadDashboard();
+            } else {
+                alert('Failed to reserve slot. Please try another slot.');
+            }
+        }
+
+        function startImmediateCharging(stationId) {
+            if (!currentUser) {
+                alert('Please login first');
+                showPage('login');
+                return;
+            }
+
+            const dbStation = chargingDB.getStationStatus(`station${stationId}`);
+            if (!dbStation) {
+                alert('Station not found');
+                return;
+            }
+
+            const availableSlot = dbStation.slots.find(slot => slot.status === 'available');
+            if (!availableSlot) {
+                alert('No available slots at this station');
+                return;
+            }
+
+            const result = chargingDB.startCharging(`station${stationId}`, availableSlot.id, currentUser.email);
+            if (result.success) {
+                alert(`Charging started at slot ${availableSlot.id}!`);
+                closeChargingModal();
+                updateAllStationMarkers();
+                loadDashboard();
+                
+                // Simulate charging completion after 5 minutes
+                setTimeout(() => {
+                    chargingDB.endCharging(`station${stationId}`, availableSlot.id);
+                    updateAllStationMarkers();
+                    alert(`Charging completed at slot ${availableSlot.id}!`);
+                }, 300000); // 5 minutes
+            } else {
+                alert('Failed to start charging');
+            }
+        }
+
+        function startCharging(stationId, slotId) {
+            if (!currentUser) return;
+
+            const result = chargingDB.startCharging(`station${stationId}`, slotId, currentUser.email);
+            if (result.success) {
+                alert(`Charging started at slot ${slotId}!`);
+                updateAllStationMarkers();
+                updateReservationsList();
+                loadDashboard();
+                
+                // Simulate charging completion after 5 minutes
+                setTimeout(() => {
+                    chargingDB.endCharging(stationId, slotId);
+                    updateAllStationMarkers();
+                    alert(`Charging completed at slot ${slotId}!`);
+                }, 300000); // 5 minutes
+            } else {
+                alert('Failed to start charging');
+            }
+        }
+
+        function cancelReservation(reservationId) {
+            if (!confirm('Are you sure you want to cancel this reservation?')) return;
+
+            const result = chargingDB.cancelReservation(reservationId);
+            if (result) {
+                alert('Reservation cancelled successfully');
+                updateAllStationMarkers();
+                updateReservationsList();
+                loadDashboard();
+            } else {
+                alert('Failed to cancel reservation');
+            }
+        }
+
+        // ============= CONTACT FUNCTION =============
+        async function handleContact(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('contactBtn');
+            const alert = document.getElementById('contactAlert');
+            
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('contactName').value,
+                        email: document.getElementById('contactEmail').value,
+                        message: document.getElementById('contactMessage').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert(alert, 'Message sent successfully! We\'ll get back to you soon.', 'success');
+                    event.target.reset();
+                } else {
+                    showAlert(alert, data.message || 'Failed to send message', 'error');
+                }
+            } catch (error) {
+                showAlert(alert, 'Network error. Please try again.', 'error');
+            } finally {
+                btn.innerHTML = 'Send Message';
+                btn.disabled = false;
+            }
+        }
+
+        // ============= PAGE NAVIGATION =============
+        function showPage(pageName) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.add('hidden'));
+            
+            const targetPage = document.getElementById(pageName);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                
+                if (pageName === 'locator' && !map) {
+                    setTimeout(() => initMap(), 100);
+                }
+                
+                if (pageName === 'dashboard') {
+                    loadDashboard();
+                }
+            }
+            
+            window.scrollTo(0, 0);
+            closeChargingModal();
+        }
+
+        // ============= UTILITY FUNCTIONS =============
+        function showAlert(element, message, type) {
+            element.textContent = message;
+            element.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                element.classList.remove('show');
+            }, 5000);
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function toRad(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('chargingModal');
+            if (event.target === modal) {
+                closeChargingModal();
+            }
+        };
+    </script>
+</body>
+</html>
