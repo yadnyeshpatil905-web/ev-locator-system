@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 /* ================= THEME ================= */
 :root{
@@ -29,6 +34,229 @@ body{
   background:var(--bg);
   color:var(--text);
   overflow:hidden;
+}
+
+/* ================= LOGIN/REGISTER PAGE ================= */
+.auth-page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+}
+
+.auth-container {
+  background: var(--panel);
+  border-radius: 24px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 500px;
+  border: 1px solid #333;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  animation: slideUp .6s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.auth-header h1 {
+  color: var(--yellow);
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.auth-header .logo {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: white;
+}
+.auth-header .logo span {
+  color: var(--yellow);
+}
+
+.auth-header p {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  background: rgba(0,0,0,0.3);
+  padding: 0.3rem;
+  border-radius: 12px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: .3s;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.auth-tab.active {
+  background: var(--yellow);
+  color: black;
+}
+
+.auth-tab:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-group input {
+  padding: 1rem 1.2rem;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  transition: .3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
+}
+
+.auth-btn {
+  padding: 1rem;
+  background: var(--yellow);
+  color: black;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .3s;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.auth-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(250, 204, 21, 0.2);
+}
+
+.auth-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.auth-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--red);
+  color: var(--red);
+  padding: 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  display: none;
+  align-items: center;
+  gap: 0.8rem;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.auth-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  display: none;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #333;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.auth-footer a {
+  color: var(--yellow);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.password-strength.weak { color: var(--red); }
+.password-strength.medium { color: #f59e0b; }
+.password-strength.strong { color: var(--green); }
+
+/* ================= MAIN APP (Hidden initially) ================= */
+.main-app {
+  display: none;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ================= LANDING ================= */
@@ -106,11 +334,6 @@ body{
   animation:slideUp .6s ease;
   z-index: 100;
   overflow-y: auto;
-}
-
-@keyframes slideUp{
-  from{transform:translateY(100%)}
-  to{transform:translateY(0)}
 }
 
 .config h2{
@@ -222,6 +445,81 @@ select{
   background: transparent;
   color: var(--yellow);
   border: 1px solid var(--yellow);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: .3s;
+}
+
+.user-avatar:hover {
+  border-color: white;
+  transform: scale(1.1);
+}
+
+.user-menu {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  background: var(--panel);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1rem;
+  min-width: 200px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 1001;
+  display: none;
+  animation: fadeIn .3s ease;
+}
+
+.user-menu.active {
+  display: block;
+}
+
+.user-menu p {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  color: var(--muted);
+  border-bottom: 1px solid #333;
+}
+
+.user-menu button {
+  width: 100%;
+  padding: 0.8rem;
+  background: transparent;
+  border: 1px solid #333;
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: .3s;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.user-menu button:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+/* Update topbar to include user avatar */
+.topbar .user-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
  
  /* ===== ELECTRIC ENERGY BACKGROUND ===== */
@@ -958,6 +1256,10 @@ select{
   .bookings-list {
     grid-template-columns: 1fr;
   }
+  
+  .auth-container {
+    padding: 2rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -976,288 +1278,424 @@ select{
   .logo {
     font-size: 2.5rem;
   }
+  
+  .auth-header h1 {
+    font-size: 2rem;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- LANDING -->
-<div class="landing" id="landing">
-  <div class="logo">GRID<span>FLOW</span></div>
-  <div class="tagline">Smart EV Charging Experience • Find, Book & Navigate to Charging Stations Across India</div>
-  
-  <div class="features">
-    <div class="feature-card">
-      <i class="fas fa-bolt"></i> <strong>20+ Stations</strong>
-      <p>Locate charging stations across major cities</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-calendar-check"></i> <strong>Easy Booking</strong>
-      <p>Reserve slots in advance with real-time availability</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-rupee-sign"></i> <strong>Transparent Pricing</strong>
-      <p>All prices in ₹ with no hidden charges</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-route"></i> <strong>Live Navigation</strong>
-      <p>Turn-by-turn navigation to your selected station</p>
-    </div>
-  </div>
-  
-  <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap: wrap;justify-content: center;">
-    <button class="cta" onclick="openConfig()">
-      <i class="fas fa-map-marker-alt"></i> Find Stations
-    </button>
-    <button class="cta-secondary" onclick="openHowItWorks()">
-      <i class="fas fa-info-circle"></i> How It Works
-    </button>
-    <button class="cta-secondary" onclick="openMyBookings()">
-      <i class="fas fa-calendar"></i> My Bookings
-    </button>
-  </div>
-</div>
-
-<!-- CONFIG -->
-<div class="config" id="config">
-  <h2>Configure Your Search</h2>
-  <p class="tagline">Select preferences before loading the map</p>
-
-  <div class="cards">
-    <div class="card">
-      <label><i class="fas fa-plug"></i> Charging Type</label>
-      <select id="type">
-        <option value="all">All Types</option>
-        <option>CCS</option>
-        <option>Type-2</option>
-        <option>CHAdeMO</option>
-        <option>Supercharger</option>
-        <option>Bharat AC001</option>
-        <option>Bharat DC001</option>
-      </select>
-    </div>
-
-    <div class="card">
-      <label><i class="fas fa-tachometer-alt"></i> Charging Speed</label>
-      <select id="speed">
-        <option value="all">All Speeds</option>
-        <option value="ultra">Ultra Fast (150kW+)</option>
-        <option value="fast">Fast (50-150kW)</option>
-        <option value="normal">Normal (22kW)</option>
-        <option value="slow">Slow (3-7kW)</option>
-      </select>
-    </div>
-
-    <div class="card">
-      <label><i class="fas fa-location-arrow"></i> Range (km)</label>
-      <select id="range">
-        <option value="50">50 km</option>
-        <option value="30">30 km</option>
-        <option value="20">20 km</option>
-        <option value="10">10 km</option>
-        <option value="5">5 km</option>
-      </select>
+<!-- AUTHENTICATION PAGE (Shown First) -->
+<div class="auth-page" id="authPage">
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="logo">GRID<span>FLOW</span></div>
+      <p>Smart EV Charging Experience • Find, Book & Navigate</p>
     </div>
     
-    <div class="card">
-      <label><i class="fas fa-clock"></i> Availability</label>
-      <select id="availability">
-        <option value="all">All Stations</option>
-        <option value="available">Available Now</option>
-        <option value="soon">Available Soon</option>
-        <option value="24/7">24/7 Open</option>
-      </select>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="loginTab">Login</button>
+      <button class="auth-tab" id="registerTab">Register</button>
     </div>
-  </div>
-
-  <div style="text-align:center;margin-top:3rem;">
-    <button class="cta" onclick="openMap()">
-      <i class="fas fa-map-marked-alt"></i> Find Charging Stations
-    </button>
-    <button class="cta-secondary" onclick="goBackToLanding()" style="margin-left:1rem;">
-      <i class="fas fa-arrow-left"></i> Back to Home
-    </button>
-  </div>
-</div>
-
-<!-- HOW IT WORKS -->
-<div class="howitworks hidden" id="howItWorks">
-  <div class="how-header">
-    <h2>How GRIDFLOW Works</h2>
-    <button onclick="closeHowItWorks()">✕</button>
-  </div>
-
-  <div class="how-content">
-    <div class="how-card">
-      <span>01</span>
-      <h3>Find Charging Stations</h3>
-      <p>Discover EV charging stations near you using our interactive map with real-time availability.</p>
-    </div>
-
-    <div class="how-card">
-      <span>02</span>
-      <h3>Compare & Filter</h3>
-      <p>Filter stations by type, speed, price in ₹, and distance to find the perfect charging spot.</p>
-    </div>
-
-    <div class="how-card">
-      <span>03</span>
-      <h3>Book Your Slot</h3>
-      <p>Reserve a charging slot in advance to guarantee availability and avoid waiting times.</p>
-    </div>
-
-    <div class="how-card">
-      <span>04</span>
-      <h3>Navigate Easily</h3>
-      <p>Get turn-by-turn navigation with real-time traffic updates and estimated charging costs.</p>
-    </div>
-
-    <div class="how-card">
-      <span>05</span>
-      <h3>Pay & Charge</h3>
-      <p>Transparent pricing in Indian Rupees. Pay via multiple options including UPI, cards, and wallets.</p>
-    </div>
-
-    <div class="how-card highlight">
-      <span>★</span>
-      <h3>Why Choose GRIDFLOW?</h3>
-      <p>India's most comprehensive EV charging platform with 20+ stations, real-time booking, and seamless navigation experience.</p>
-    </div>
-  </div>
-</div>
-
-<!-- ENERGY BACKGROUND -->
-<div class="energy-bg">
-  <span style="left:5%;animation-duration:4s"></span>
-  <span style="left:15%;animation-duration:6s"></span>
-  <span style="left:25%;animation-duration:5s"></span>
-  <span style="left:35%;animation-duration:7s"></span>
-  <span style="left:45%;animation-duration:4.5s"></span>
-  <span style="left:55%;animation-duration:6.5s"></span>
-  <span style="left:65%;animation-duration:5.5s"></span>
-  <span style="left:75%;animation-duration:4s"></span>
-  <span style="left:85%;animation-duration:6s"></span>
-  <span style="left:95%;animation-duration:5s"></span>
-</div>
-
-<!-- MAP VIEW -->
-<div class="map-view" id="mapView">
-  <div class="topbar">
-    <span id="mapTitle">Charging Stations</span>
-    <button onclick="locateUser()">
-      <i class="fas fa-location-crosshairs"></i> My Location
-    </button>
-    <button class="secondary" onclick="goBackToConfig()">
-      <i class="fas fa-sliders"></i> Filters
-    </button>
-    <button class="secondary" onclick="openMyBookings()">
-      <i class="fas fa-calendar"></i> My Bookings
-    </button>
-    <button class="secondary" onclick="goBackToLanding()">
-      <i class="fas fa-home"></i> Home
-    </button>
-  </div>
-  <div id="map"></div>
-</div>
-
-<!-- STATION DETAILS PANEL -->
-<div class="station-details" id="stationDetails">
-  <div class="station-header">
-    <h3 id="stationName">Station Name</h3>
-    <button class="close-details" onclick="closeStationDetails()">✕</button>
-  </div>
-  
-  <div class="station-info">
-    <p><i class="fas fa-map-marker-alt"></i> <span id="stationAddress">Address not available</span></p>
-    <p><i class="fas fa-plug"></i> <span id="stationType">Type: </span></p>
-    <p><i class="fas fa-tachometer-alt"></i> <span id="stationSpeed">Speed: </span></p>
-    <p><i class="fas fa-rupee-sign"></i> <span id="stationPrice">Price: </span></p>
-    <p><i class="fas fa-clock"></i> <span id="stationHours">24/7</span></p>
-  </div>
-  
-  <div class="availability">
-    <h4>Availability <span id="availabilityStatus" class="availability-status available">Available</span></h4>
-    <p id="availableSlots">4 out of 6 slots available</p>
     
-    <div class="slots-container">
-      <div class="slots-header">
-        <span>Select Time Slot:</span>
-        <span id="selectedTime">Not selected</span>
+    <!-- Login Form -->
+    <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="loginEmail"><i class="fas fa-envelope"></i> Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" required>
       </div>
-      <div class="slots" id="timeSlots">
-        <!-- Time slots will be generated here -->
+      
+      <div class="form-group">
+        <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
+      </div>
+      
+      <div class="auth-error" id="loginError">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="loginErrorMessage">Invalid credentials</span>
+      </div>
+      
+      <button type="submit" class="auth-btn" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Sign In</span>
+      </button>
+    </form>
+    
+    <!-- Register Form (Hidden Initially) -->
+    <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
+      <div class="form-group">
+        <label for="registerName"><i class="fas fa-user"></i> Full Name</label>
+        <input type="text" id="registerName" placeholder="John Doe" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="registerEmail"><i class="fas fa-envelope"></i> Email Address</label>
+        <input type="email" id="registerEmail" placeholder="you@example.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="registerPassword"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="registerPassword" placeholder="••••••••" minlength="6" required oninput="checkPasswordStrength(this.value)">
+        <div class="password-strength" id="passwordStrength"></div>
+      </div>
+      
+      <div class="form-group">
+        <label for="registerConfirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+        <input type="password" id="registerConfirmPassword" placeholder="••••••••" minlength="6" required>
+      </div>
+      
+      <div class="auth-error" id="registerError">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="registerErrorMessage">Error occurred</span>
+      </div>
+      
+      <div class="auth-success" id="registerSuccess">
+        <i class="fas fa-check-circle"></i>
+        <span>Registration successful! Redirecting...</span>
+      </div>
+      
+      <button type="submit" class="auth-btn" id="registerBtn">
+        <i class="fas fa-user-plus"></i>
+        <span>Create Account</span>
+      </button>
+    </form>
+    
+    <div class="auth-footer">
+      <p id="authFooterText">
+        By continuing, you agree to GRIDFLOW's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APPLICATION (Hidden Initially) -->
+<div class="main-app" id="mainApp">
+  
+  <!-- USER MENU -->
+  <div class="user-menu" id="userMenu">
+    <p id="userEmail"></p>
+    <p id="userName"></p>
+    <button onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
+
+  <!-- LANDING -->
+  <div class="landing" id="landing">
+    <div class="logo">GRID<span>FLOW</span></div>
+    <div class="tagline">Smart EV Charging Experience • Find, Book & Navigate to Charging Stations Across India</div>
+    
+    <div class="features">
+      <div class="feature-card">
+        <i class="fas fa-bolt"></i> <strong>20+ Stations</strong>
+        <p>Locate charging stations across major cities</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-calendar-check"></i> <strong>Easy Booking</strong>
+        <p>Reserve slots in advance with real-time availability</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-rupee-sign"></i> <strong>Transparent Pricing</strong>
+        <p>All prices in ₹ with no hidden charges</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-route"></i> <strong>Live Navigation</strong>
+        <p>Turn-by-turn navigation to your selected station</p>
       </div>
     </div>
     
-    <button class="book-btn" id="bookButton" onclick="bookSlot()">
-      <i class="fas fa-calendar-check"></i> Book Selected Slot
-    </button>
+    <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap: wrap;justify-content: center;">
+      <button class="cta" onclick="openConfig()">
+        <i class="fas fa-map-marker-alt"></i> Find Stations
+      </button>
+      <button class="cta-secondary" onclick="openHowItWorks()">
+        <i class="fas fa-info-circle"></i> How It Works
+      </button>
+      <button class="cta-secondary" onclick="openMyBookings()">
+        <i class="fas fa-calendar"></i> My Bookings
+      </button>
+    </div>
   </div>
-  
-  <div class="actions-section">
-    <h4>Actions</h4>
-    <button class="action-btn primary" onclick="startNavigation()">
-      <i class="fas fa-route"></i> Navigate to Station
-    </button>
-    <button class="action-btn secondary" onclick="shareStation()">
-      <i class="fas fa-share"></i> Share Station
-    </button>
+
+  <!-- CONFIG -->
+  <div class="config" id="config">
+    <h2>Configure Your Search</h2>
+    <p class="tagline">Select preferences before loading the map</p>
+
+    <div class="cards">
+      <div class="card">
+        <label><i class="fas fa-plug"></i> Charging Type</label>
+        <select id="type">
+          <option value="all">All Types</option>
+          <option>CCS</option>
+          <option>Type-2</option>
+          <option>CHAdeMO</option>
+          <option>Supercharger</option>
+          <option>Bharat AC001</option>
+          <option>Bharat DC001</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <label><i class="fas fa-tachometer-alt"></i> Charging Speed</label>
+        <select id="speed">
+          <option value="all">All Speeds</option>
+          <option value="ultra">Ultra Fast (150kW+)</option>
+          <option value="fast">Fast (50-150kW)</option>
+          <option value="normal">Normal (22kW)</option>
+          <option value="slow">Slow (3-7kW)</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <label><i class="fas fa-location-arrow"></i> Range (km)</label>
+        <select id="range">
+          <option value="50">50 km</option>
+          <option value="30">30 km</option>
+          <option value="20">20 km</option>
+          <option value="10">10 km</option>
+          <option value="5">5 km</option>
+        </select>
+      </div>
+      
+      <div class="card">
+        <label><i class="fas fa-clock"></i> Availability</label>
+        <select id="availability">
+          <option value="all">All Stations</option>
+          <option value="available">Available Now</option>
+          <option value="soon">Available Soon</option>
+          <option value="24/7">24/7 Open</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:3rem;">
+      <button class="cta" onclick="openMap()">
+        <i class="fas fa-map-marked-alt"></i> Find Charging Stations
+      </button>
+      <button class="cta-secondary" onclick="goBackToLanding()" style="margin-left:1rem;">
+        <i class="fas fa-arrow-left"></i> Back to Home
+      </button>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="howitworks hidden" id="howItWorks">
+    <div class="how-header">
+      <h2>How GRIDFLOW Works</h2>
+      <button onclick="closeHowItWorks()">✕</button>
+    </div>
+
+    <div class="how-content">
+      <div class="how-card">
+        <span>01</span>
+        <h3>Find Charging Stations</h3>
+        <p>Discover EV charging stations near you using our interactive map with real-time availability.</p>
+      </div>
+
+      <div class="how-card">
+        <span>02</span>
+        <h3>Compare & Filter</h3>
+        <p>Filter stations by type, speed, price in ₹, and distance to find the perfect charging spot.</p>
+      </div>
+
+      <div class="how-card">
+        <span>03</span>
+        <h3>Book Your Slot</h3>
+        <p>Reserve a charging slot in advance to guarantee availability and avoid waiting times.</p>
+      </div>
+
+      <div class="how-card">
+        <span>04</span>
+        <h3>Navigate Easily</h3>
+        <p>Get turn-by-turn navigation with real-time traffic updates and estimated charging costs.</p>
+      </div>
+
+      <div class="how-card">
+        <span>05</span>
+        <h3>Pay & Charge</h3>
+        <p>Transparent pricing in Indian Rupees. Pay via multiple options including UPI, cards, and wallets.</p>
+      </div>
+
+      <div class="how-card highlight">
+        <span>★</span>
+        <h3>Why Choose GRIDFLOW?</h3>
+        <p>India's most comprehensive EV charging platform with 20+ stations, real-time booking, and seamless navigation experience.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENERGY BACKGROUND -->
+  <div class="energy-bg">
+    <span style="left:5%;animation-duration:4s"></span>
+    <span style="left:15%;animation-duration:6s"></span>
+    <span style="left:25%;animation-duration:5s"></span>
+    <span style="left:35%;animation-duration:7s"></span>
+    <span style="left:45%;animation-duration:4.5s"></span>
+    <span style="left:55%;animation-duration:6.5s"></span>
+    <span style="left:65%;animation-duration:5.5s"></span>
+    <span style="left:75%;animation-duration:4s"></span>
+    <span style="left:85%;animation-duration:6s"></span>
+    <span style="left:95%;animation-duration:5s"></span>
+  </div>
+
+  <!-- MAP VIEW -->
+  <div class="map-view" id="mapView">
+    <div class="topbar">
+      <div class="user-section" id="userSection">
+        <div class="user-avatar" id="userAvatar" onclick="toggleUserMenu()">U</div>
+      </div>
+      <span id="mapTitle">Charging Stations</span>
+      <button onclick="locateUser()">
+        <i class="fas fa-location-crosshairs"></i> My Location
+      </button>
+      <button class="secondary" onclick="goBackToConfig()">
+        <i class="fas fa-sliders"></i> Filters
+      </button>
+      <button class="secondary" onclick="openMyBookings()">
+        <i class="fas fa-calendar"></i> My Bookings
+      </button>
+      <button class="secondary" onclick="goBackToLanding()">
+        <i class="fas fa-home"></i> Home
+      </button>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <!-- STATION DETAILS PANEL -->
+  <div class="station-details" id="stationDetails">
+    <div class="station-header">
+      <h3 id="stationName">Station Name</h3>
+      <button class="close-details" onclick="closeStationDetails()">✕</button>
+    </div>
+    
+    <div class="station-info">
+      <p><i class="fas fa-map-marker-alt"></i> <span id="stationAddress">Address not available</span></p>
+      <p><i class="fas fa-plug"></i> <span id="stationType">Type: </span></p>
+      <p><i class="fas fa-tachometer-alt"></i> <span id="stationSpeed">Speed: </span></p>
+      <p><i class="fas fa-rupee-sign"></i> <span id="stationPrice">Price: </span></p>
+      <p><i class="fas fa-clock"></i> <span id="stationHours">24/7</span></p>
+    </div>
+    
+    <div class="availability">
+      <h4>Availability <span id="availabilityStatus" class="availability-status available">Available</span></h4>
+      <p id="availableSlots">4 out of 6 slots available</p>
+      
+      <div class="slots-container">
+        <div class="slots-header">
+          <span>Select Time Slot:</span>
+          <span id="selectedTime">Not selected</span>
+        </div>
+        <div class="slots" id="timeSlots">
+          <!-- Time slots will be generated here -->
+        </div>
+      </div>
+      
+      <button class="book-btn" id="bookButton" onclick="bookSlot()">
+        <i class="fas fa-calendar-check"></i> Book Selected Slot
+      </button>
+    </div>
+    
+    <div class="actions-section">
+      <h4>Actions</h4>
+      <button class="action-btn primary" onclick="startNavigation()">
+        <i class="fas fa-route"></i> Navigate to Station
+      </button>
+      <button class="action-btn secondary" onclick="shareStation()">
+        <i class="fas fa-share"></i> Share Station
+      </button>
+    </div>
+  </div>
+
+  <!-- NAVIGATION PANEL -->
+  <div class="navigation-panel" id="navigationPanel">
+    <div class="nav-header">
+      <div class="nav-info">
+        <h4 id="navToStation">Navigation Active</h4>
+        <p id="navDistance">Calculating distance...</p>
+      </div>
+      <button class="close-details" onclick="closeNavigation()">✕</button>
+    </div>
+    
+    <div class="nav-stats">
+      <div class="stat">
+        <div class="stat-value" id="navETA">-- min</div>
+        <div class="stat-label">Estimated Time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="navDistanceVal">-- km</div>
+        <div class="stat-label">Distance</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="navBattery">-- %</div>
+        <div class="stat-label">Battery After Trip</div>
+      </div>
+    </div>
+    
+    <div class="nav-actions">
+      <button class="nav-btn primary" onclick="openInMaps()">
+        <i class="fas fa-external-link-alt"></i> Open in Maps
+      </button>
+      <button class="nav-btn secondary" onclick="stopNavigation()">
+        <i class="fas fa-stop"></i> Stop Navigation
+      </button>
+    </div>
+  </div>
+
+  <!-- MY BOOKINGS PANEL -->
+  <div class="my-bookings" id="myBookings">
+    <div class="bookings-header">
+      <h2>My Bookings</h2>
+      <button onclick="closeMyBookings()">✕</button>
+    </div>
+    
+    <div id="bookingsContainer">
+      <!-- Bookings will be dynamically generated here -->
+    </div>
+    
+    <div style="text-align:center;margin-top:2rem;">
+      <button class="cta" onclick="goBackToLanding()">
+        <i class="fas fa-plus"></i> Book New Station
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- NAVIGATION PANEL -->
-<div class="navigation-panel" id="navigationPanel">
-  <div class="nav-header">
-    <div class="nav-info">
-      <h4 id="navToStation">Navigation Active</h4>
-      <p id="navDistance">Calculating distance...</p>
-    </div>
-    <button class="close-details" onclick="closeNavigation()">✕</button>
-  </div>
-  
-  <div class="nav-stats">
-    <div class="stat">
-      <div class="stat-value" id="navETA">-- min</div>
-      <div class="stat-label">Estimated Time</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" id="navDistanceVal">-- km</div>
-      <div class="stat-label">Distance</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" id="navBattery">-- %</div>
-      <div class="stat-label">Battery After Trip</div>
-    </div>
-  </div>
-  
-  <div class="nav-actions">
-    <button class="nav-btn primary" onclick="openInMaps()">
-      <i class="fas fa-external-link-alt"></i> Open in Maps
-    </button>
-    <button class="nav-btn secondary" onclick="stopNavigation()">
-      <i class="fas fa-stop"></i> Stop Navigation
-    </button>
-  </div>
-</div>
+<!-- Firebase Configuration -->
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyASMVO-kamXNxMKf1QAY6FSLS2q-OngObI",
+    authDomain: "ev-station-locator-system.firebaseapp.com",
+    projectId: "ev-station-locator-system",
+    storageBucket: "ev-station-locator-system.firebasestorage.app",
+    messagingSenderId: "708506235224",
+    appId: "1:708506235224:web:083410a03d46d3af89f52d"
+  };
 
-<!-- MY BOOKINGS PANEL -->
-<div class="my-bookings" id="myBookings">
-  <div class="bookings-header">
-    <h2>My Bookings</h2>
-    <button onclick="closeMyBookings()">✕</button>
-  </div>
-  
-  <div id="bookingsContainer">
-    <!-- Bookings will be dynamically generated here -->
-  </div>
-  
-  <div style="text-align:center;margin-top:2rem;">
-    <button class="cta" onclick="goBackToLanding()">
-      <i class="fas fa-plus"></i> Book New Station
-    </button>
-  </div>
-</div>
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  // Check auth state on page load - THIS IS CRITICAL
+auth.onAuthStateChanged((user) => {
+  console.log('Auth state changed:', user ? user.email : 'No user');
+  if (user) {
+    // User is signed in
+    currentUser = user;
+    console.log('User logged in, showing main app');
+    showMainApp();
+  } else {
+    // User is signed out
+    console.log('No user, showing auth page');
+    document.getElementById('authPage').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+  }
+});
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
@@ -1270,6 +1708,7 @@ let selectedStation = null;
 let selectedSlot = null;
 let navigationActive = false;
 let myBookings = [];
+let currentUser = null;
 
 // Extended list of dummy charging stations (20+ stations across Pune)
 const stations = [
@@ -1280,32 +1719,9 @@ const stations = [
   {id: 4, name: "City Power Station", lat: 18.5523, lng: 73.9021, type: "CCS", speed: "Fast", price: "₹16/kWh", address: "Shivajinagar, Pune", available: 0, total: 4, status: "busy", operator: "City Power"},
   {id: 5, name: "Green Energy Charger", lat: 18.4887, lng: 73.8234, type: "Type-2", speed: "Normal", price: "₹12/kWh", address: "Bavdhan, Pune", available: 3, total: 4, status: "available", operator: "Green Energy"},
   
-  // Pune Suburban Stations
+  // More stations...
   {id: 6, name: "Supercharge Pro", lat: 18.5401, lng: 73.8912, type: "Supercharger", speed: "Ultra Fast", price: "₹22/kWh", address: "Hinjewadi, Pune", available: 5, total: 10, status: "available", operator: "Tesla"},
   {id: 7, name: "Eco Charging Zone", lat: 18.5678, lng: 73.7723, type: "CCS", speed: "Fast", price: "₹15/kWh", address: "Wakad, Pune", available: 2, total: 4, status: "limited", operator: "Eco Charge"},
-  {id: 8, name: "Metro EV Station", lat: 18.5022, lng: 73.8556, type: "Type-2", speed: "Normal", price: "₹14/kWh", address: "Deccan Gymkhana, Pune", available: 4, total: 6, status: "available", operator: "Metro EV"},
-  {id: 9, name: "Power Up Center", lat: 18.5790, lng: 73.7412, type: "Bharat DC001", speed: "Fast", price: "₹10/kWh", address: "Pimple Saudagar, Pune", available: 3, total: 4, status: "available", operator: "Power Up"},
-  {id: 10, name: "EV Charging Point", lat: 18.4589, lng: 73.8556, type: "Bharat AC001", speed: "Slow", price: "₹8/kWh", address: "Katraj, Pune", available: 6, total: 8, status: "available", operator: "EV Point"},
-  
-  // More Stations in Pune
-  {id: 11, name: "Quick Charge Hub", lat: 18.5989, lng: 73.8045, type: "CCS", speed: "Ultra Fast", price: "₹19/kWh", address: "Chinchwad, Pune", available: 2, total: 4, status: "limited", operator: "Quick Charge"},
-  {id: 12, name: "Solar EV Station", lat: 18.5155, lng: 73.9291, type: "Type-2", speed: "Normal", price: "₹13/kWh", address: "Viman Nagar, Pune", available: 4, total: 6, status: "available", operator: "Solar EV"},
-  {id: 13, name: "Highway Charger", lat: 18.4529, lng: 73.8618, type: "CHAdeMO", speed: "Fast", price: "₹17/kWh", address: "Satara Road, Pune", available: 5, total: 8, status: "available", operator: "Highway Charge"},
-  {id: 14, name: "Mall Charging Point", lat: 18.5632, lng: 73.9118, type: "Type-2", speed: "Normal", price: "₹14/kWh", address: "Phoenix Mall, Pune", available: 0, total: 4, status: "busy", operator: "Mall Charge"},
-  {id: 15, name: "Tech Park Charger", lat: 18.5923, lng: 73.7336, type: "Supercharger", speed: "Ultra Fast", price: "₹21/kWh", address: "IT Park, Pune", available: 3, total: 6, status: "available", operator: "Tech Park"},
-  
-  // Additional Stations
-  {id: 16, name: "Residential Charger", lat: 18.4837, lng: 73.8045, type: "Type-2", speed: "Slow", price: "₹9/kWh", address: "Baner, Pune", available: 4, total: 4, status: "available", operator: "Residential EV"},
-  {id: 17, name: "Airport Charging", lat: 18.5822, lng: 73.9197, type: "CCS", speed: "Fast", price: "₹18/kWh", address: "Pune Airport", available: 2, total: 4, status: "limited", operator: "Airport EV"},
-  {id: 18, name: "University Charger", lat: 18.5529, lng: 73.8264, type: "Type-2", speed: "Normal", price: "₹11/kWh", address: "University Road", available: 3, total: 4, status: "available", operator: "University EV"},
-  {id: 19, name: "Hospital Charging", lat: 18.5079, lng: 73.8776, type: "CCS", speed: "Fast", price: "₹16/kWh", address: "Ruby Hall, Pune", available: 1, total: 3, status: "limited", operator: "Hospital EV"},
-  {id: 20, name: "Hotel Charging Point", lat: 18.5296, lng: 73.8749, type: "Type-2", speed: "Normal", price: "₹15/kWh", address: "Koregaon Park, Pune", available: 5, total: 8, status: "available", operator: "Hotel EV"},
-  
-  // More Stations
-  {id: 21, name: "Metro Station Charger", lat: 18.4987, lng: 73.8476, type: "Bharat DC001", speed: "Fast", price: "₹12/kWh", address: "Swargate, Pune", available: 4, total: 6, status: "available", operator: "Metro EV"},
-  {id: 22, name: "Shopping Center EV", lat: 18.5178, lng: 73.8476, type: "Type-2", speed: "Normal", price: "₹13/kWh", address: "Camp, Pune", available: 2, total: 4, status: "limited", operator: "Shopping EV"},
-  {id: 23, name: "Expressway Charger", lat: 18.4207, lng: 73.9161, type: "Supercharger", speed: "Ultra Fast", price: "₹23/kWh", address: "Mumbai-Pune Expressway", available: 6, total: 8, status: "available", operator: "Expressway EV"},
-  {id: 24, name: "Corporate Park EV", lat: 18.5674, lng: 73.7558, type: "CCS", speed: "Fast", price: "₹17/kWh", address: "Corporate Park, Pune", available: 3, total: 6, status: "available", operator: "Corporate EV"}
 ];
 
 // Time slots for booking
@@ -1360,6 +1776,285 @@ myBookings = [
     address: "Kothrud, Pune"
   }
 ];
+
+// ================= AUTHENTICATION FUNCTIONS =================
+
+// Switch between login and register tabs
+document.getElementById('loginTab').addEventListener('click', function() {
+  document.getElementById('loginTab').classList.add('active');
+  document.getElementById('registerTab').classList.remove('active');
+  document.getElementById('loginForm').style.display = 'flex';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('registerError').style.display = 'none';
+  document.getElementById('registerSuccess').style.display = 'none';
+});
+
+document.getElementById('registerTab').addEventListener('click', function() {
+  document.getElementById('registerTab').classList.add('active');
+  document.getElementById('loginTab').classList.remove('active');
+  document.getElementById('registerForm').style.display = 'flex';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('registerError').style.display = 'none';
+  document.getElementById('registerSuccess').style.display = 'none';
+});
+
+// Check password strength
+function checkPasswordStrength(password) {
+  const strengthElement = document.getElementById('passwordStrength');
+  if (!password) {
+    strengthElement.textContent = '';
+    strengthElement.className = 'password-strength';
+    return;
+  }
+  
+  let strength = 0;
+  if (password.length >= 8) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
+  
+  let strengthText = '';
+  let strengthClass = '';
+  
+  if (strength <= 1) {
+    strengthText = 'Weak';
+    strengthClass = 'weak';
+  } else if (strength <= 2) {
+    strengthText = 'Medium';
+    strengthClass = 'medium';
+  } else {
+    strengthText = 'Strong';
+    strengthClass = 'strong';
+  }
+  
+  strengthElement.textContent = `Password strength: ${strengthText}`;
+  strengthElement.className = `password-strength ${strengthClass}`;
+}
+
+// Handle login
+async function handleLogin(event) {
+  event.preventDefault();
+  
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const loginBtn = document.getElementById('loginBtn');
+  const errorElement = document.getElementById('loginError');
+  
+  // Show loading state
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+  errorElement.style.display = 'none';
+  
+  try {
+    // Sign in with Firebase
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    currentUser = userCredential.user;
+    
+    // Show success and redirect
+    loginBtn.innerHTML = '<i class="fas fa-check"></i> Success!';
+    setTimeout(() => {
+      showMainApp();
+    }, 1000);
+    
+  } catch (error) {
+    // Handle errors
+    let errorMessage = 'An error occurred. Please try again.';
+    
+    switch (error.code) {
+      case 'auth/invalid-email':
+        errorMessage = 'Invalid email address.';
+        break;
+      case 'auth/user-disabled':
+        errorMessage = 'This account has been disabled.';
+        break;
+      case 'auth/user-not-found':
+        errorMessage = 'No account found with this email.';
+        break;
+      case 'auth/wrong-password':
+        errorMessage = 'Incorrect password.';
+        break;
+      case 'auth/network-request-failed':
+        errorMessage = 'Network error. Please check your connection.';
+        break;
+      default:
+        errorMessage = error.message || 'An error occurred. Please try again.';
+    }
+    
+    errorElement.style.display = 'flex';
+    document.getElementById('loginErrorMessage').textContent = errorMessage;
+    
+    // Reset button
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+  }
+}
+
+// Handle registration
+async function handleRegister(event) {
+  event.preventDefault();
+  
+  const name = document.getElementById('registerName').value;
+  const email = document.getElementById('registerEmail').value;
+  const password = document.getElementById('registerPassword').value;
+  const confirmPassword = document.getElementById('registerConfirmPassword').value;
+  const registerBtn = document.getElementById('registerBtn');
+  const errorElement = document.getElementById('registerError');
+  const successElement = document.getElementById('registerSuccess');
+  
+  // Validate passwords match
+  if (password !== confirmPassword) {
+    errorElement.style.display = 'flex';
+    document.getElementById('registerErrorMessage').textContent = 'Passwords do not match.';
+    return;
+  }
+  
+  // Show loading state
+  registerBtn.disabled = true;
+  registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+  errorElement.style.display = 'none';
+  successElement.style.display = 'none';
+  
+  try {
+    // Create user with Firebase
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    currentUser = userCredential.user;
+    
+    // Update user profile
+    await currentUser.updateProfile({
+      displayName: name
+    });
+    
+    // Save additional user data to Firestore
+    await db.collection('users').doc(currentUser.uid).set({
+      name: name,
+      email: email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Show success message
+    successElement.style.display = 'flex';
+    registerBtn.innerHTML = '<i class="fas fa-check"></i> Account Created!';
+    
+    // Redirect to main app after delay
+    setTimeout(() => {
+      showMainApp();
+    }, 1500);
+    
+  } catch (error) {
+    // Handle errors
+    let errorMessage = 'An error occurred. Please try again.';
+    
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage = 'Email already in use.';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = 'Invalid email address.';
+        break;
+      case 'auth/weak-password':
+        errorMessage = 'Password should be at least 6 characters.';
+        break;
+      case 'auth/network-request-failed':
+        errorMessage = 'Network error. Please check your connection.';
+        break;
+      default:
+        errorMessage = error.message || 'An error occurred. Please try again.';
+    }
+    
+    errorElement.style.display = 'flex';
+    document.getElementById('registerErrorMessage').textContent = errorMessage;
+    
+    // Reset button
+    registerBtn.disabled = false;
+    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+  }
+}
+
+// Show main application after login
+function showMainApp() {
+  document.getElementById('authPage').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  updateUserUI();
+  initApp();
+}
+
+// Update user UI in main app
+function updateUserUI() {
+  if (currentUser) {
+    const userAvatar = document.getElementById('userAvatar');
+    const userEmail = document.getElementById('userEmail');
+    const userName = document.getElementById('userName');
+    
+    // Get first letter of email or name for avatar
+    const displayName = currentUser.displayName || currentUser.email;
+    const firstLetter = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+    userAvatar.textContent = firstLetter;
+    
+    userEmail.textContent = currentUser.email;
+    userName.textContent = currentUser.displayName || 'User';
+  }
+}
+
+// Logout function
+async function logout() {
+  try {
+    await auth.signOut();
+    // Hide main app and show auth page
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('authPage').style.display = 'flex';
+    document.getElementById('userMenu').classList.remove('active');
+    
+    // Reset forms
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('registerName').value = '';
+    document.getElementById('registerEmail').value = '';
+    document.getElementById('registerPassword').value = '';
+    document.getElementById('registerConfirmPassword').value = '';
+    
+    // Reset to login tab
+    document.getElementById('loginTab').classList.add('active');
+    document.getElementById('registerTab').classList.remove('active');
+    document.getElementById('loginForm').style.display = 'flex';
+    document.getElementById('registerForm').style.display = 'none';
+    
+    currentUser = null;
+  } catch (error) {
+    console.error('Logout error:', error);
+    alert('Error logging out: ' + error.message);
+  }
+}
+
+// Toggle user menu
+function toggleUserMenu() {
+  const userMenu = document.getElementById('userMenu');
+  userMenu.classList.toggle('active');
+}
+
+// Close user menu when clicking outside
+document.addEventListener('click', (event) => {
+  const userMenu = document.getElementById('userMenu');
+  const userAvatar = document.getElementById('userAvatar');
+  
+  if (userMenu && userAvatar && !userMenu.contains(event.target) && !userAvatar.contains(event.target)) {
+    userMenu.classList.remove('active');
+  }
+});
+
+// Check auth state on page load
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    // User is signed in
+    currentUser = user;
+    showMainApp();
+  }
+  // If user is not signed in, auth page will remain visible
+});
+
+// ================= MAIN APP FUNCTIONS =================
 
 // Initialize the application
 function initApp() {
@@ -1589,6 +2284,12 @@ function closeStationDetails() {
 function bookSlot() {
   if (!selectedStation || !selectedSlot) return;
   
+  // Check if user is logged in
+  if (!currentUser) {
+    alert('Please login to book a slot.');
+    return;
+  }
+  
   // Generate booking ID
   const bookingId = Date.now();
   
@@ -1602,7 +2303,8 @@ function bookSlot() {
     duration: "1 hour",
     cost: selectedSlot.price,
     status: "upcoming",
-    address: selectedStation.address
+    address: selectedStation.address,
+    userId: currentUser.uid
   };
   
   // Add to bookings
@@ -1615,6 +2317,15 @@ function bookSlot() {
   } else if (selectedStation.available < 3) {
     selectedStation.status = 'limited';
   }
+  
+  // Save to Firestore
+  db.collection('bookings').add({
+    ...newBooking,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    userId: currentUser.uid
+  }).catch(error => {
+    console.error('Error saving booking to Firestore:', error);
+  });
   
   // Update UI
   renderBookings();
@@ -1937,9 +2648,6 @@ function openHowItWorks() {
 function closeHowItWorks() {
   document.getElementById('howItWorks').classList.add('hidden');
 }
-
-// Initialize the app when page loads
-window.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
